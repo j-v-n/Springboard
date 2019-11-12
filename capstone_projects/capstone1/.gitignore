@@ -1,0 +1,9 @@
+*.docx
+*.png
+decision_tree.pdf
+*.csv
+*.pkl
+*.py
+Inital_Look.ipynb
+pitch_creator.ipynb
+.ipynb_checkpoints
