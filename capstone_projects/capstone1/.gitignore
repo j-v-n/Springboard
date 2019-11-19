@@ -6,4 +6,5 @@ decision_tree.pdf
 *.py
 Inital_Look.ipynb
 pitch_creator.ipynb
+data_exploration.ipynb
 .ipynb_checkpoints
