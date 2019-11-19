@@ -1,5 +1,4 @@
 *.docx
-*.png
 decision_tree.pdf
 *.csv
 *.pkl
@@ -8,3 +7,4 @@ Inital_Look.ipynb
 pitch_creator.ipynb
 data_exploration.ipynb
 .ipynb_checkpoints
+wrangling_report1.png
