@@ -1,0 +1,11 @@
+mlruns
+data
+checkpoint
+first_model.ipynb
+*.ttf
+my_mnist_model.data-00000-of-00001
+my_mnist_model.index
+my_mnist_model.meta
+submission.csv
+*.json
+.ipynb_checkpoints
