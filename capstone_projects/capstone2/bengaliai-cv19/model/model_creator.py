@@ -11,6 +11,7 @@ from keras.layers import (
 from keras.optimizers import Adam
 from keras.utils import plot_model
 from keras.backend import clear_session
+from keras import initializers
 
 
 def model_create(
@@ -20,13 +21,14 @@ def model_create(
     dense_layer1_count=1024,
     dropout_rate2=0.3,
     dense_layer2_count=512,
-    conv_nfilters=64,
+    conv_nfilters=100,
     conv_kernel_size=3,
-    n_strides=0,
+    n_strides=1,
     pool_size=5,
     activation_conv="relu",
     activation_dense="relu",
     activation_out="softmax",
+    bn_momentum=0.99,
 ):
 
     """
@@ -44,6 +46,7 @@ def model_create(
                 filters=conv_nfilters,
                 kernel_size=(conv_kernel_size, conv_kernel_size),
                 padding="SAME",
+                strides=n_strides,
                 activation=activation_conv,
                 input_shape=input_shape,
             )(inputs)
@@ -53,20 +56,24 @@ def model_create(
                 filters=conv_nfilters,
                 kernel_size=(conv_kernel_size, conv_kernel_size),
                 padding="SAME",
+                strides=n_strides,
                 activation=activation_conv,
                 input_shape=input_shape,
             )(model)
 
-        model = MaxPool2D(pool_size=(pool_size, pool_size), dim_ordering="tf")(model)
+        model = MaxPool2D(pool_size=(pool_size, pool_size))(model)
 
     model = Dropout(rate=dropout_rate1)(model)
     model = Flatten()(model)
+    model = BatchNormalization(momentum=bn_momentum)(model)
     model = Dense(
-        dense_layer1_count, activation=activation_dense, name="first_dense_layer"
+        dense_layer1_count, activation=activation_dense, name="first_dense_layer",
     )(model)
+
     model = Dropout(rate=dropout_rate2)(model)
+    model = BatchNormalization(momentum=bn_momentum)(model)
     dense = Dense(
-        dense_layer2_count, activation=activation_dense, name="second_dense_layer"
+        dense_layer2_count, activation=activation_dense, name="second_dense_layer",
     )(model)
 
     out_root = Dense(168, activation=activation_out, name="output_root")(dense)

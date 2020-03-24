@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
+from PIL import Image
 
 
-def data_loader(parquet_file_path, df_dict_file):
+def data_loader(parquet_file_path, df_dict_file, compress=True):
     """
     This function loads up each parquet file, merges with corresponding target values
     and returns X and y arrays for training by the neural network
@@ -31,7 +32,7 @@ def data_loader(parquet_file_path, df_dict_file):
 
     del train_df
     # onehotencode y values
-    ohe = OneHotEncoder()
+    ohe = OneHotEncoder(sparse=False)
     y_root = ohe.fit_transform(y_root.reshape(-1, 1))
     y_vowel = ohe.fit_transform(y_vowel.reshape(-1, 1))
     y_consonant = ohe.fit_transform(y_consonant.reshape(-1, 1))
@@ -48,6 +49,29 @@ def data_loader(parquet_file_path, df_dict_file):
         y_test_vowel,
     ) = train_test_split(X, y_root, y_consonant, y_vowel, test_size=0.1)
 
+    if compress:
+        print("Compressing Images")
+        size = 64, 37
+        x_train_resize = np.zeros((X_train.shape[0], 64, 37, 1))
+        x_test_resize = np.zeros((X_test.shape[0], 64, 37, 1))
+
+        for i in range(len(X_train)):
+            image = Image.fromarray(X_train[i].reshape(137, 236).astype(np.float32))
+            image.thumbnail(size, Image.ANTIALIAS)
+            x_train_resize[i] = (
+                np.array(image.getdata(), np.float32).reshape(
+                    image.size[0], image.size[1], 1
+                )
+            ) / 255
+
+        for i in range(len(X_test)):
+            image = Image.fromarray(X_test[i].reshape(137, 236).astype(np.float32))
+            image.thumbnail(size, Image.ANTIALIAS)
+            x_test_resize[i] = (
+                np.array(image.getdata(), np.float32).reshape(
+                    image.size[0], image.size[1], 1
+                )
+            ) / 255
     # delete some large arrays to save memory
     del y_root
     del y_consonant
@@ -55,8 +79,8 @@ def data_loader(parquet_file_path, df_dict_file):
     del X
 
     return (
-        X_train,
-        X_test,
+        x_train_resize,
+        x_test_resize,
         y_train_root,
         y_test_root,
         y_train_consonant,
@@ -64,4 +88,3 @@ def data_loader(parquet_file_path, df_dict_file):
         y_train_vowel,
         y_test_vowel,
     )
-
