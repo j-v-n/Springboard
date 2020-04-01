@@ -19,9 +19,10 @@ In this project, the notebooks are only used to visualize the data and interacti
     - debugger -> Used on an as-needed basis for debugging
 
   - Notebooks
+    - visualization -> Exploratory notebook which visualizes features within the dataset
     - experiments -> First set of  experiments with a 108 experiment-long matrix. This set of experiments does not consider image augmentation
     - experiments_second_set_augmentation -> Second set of experiments with the top 25 experiments from the first set, with image augmentation
-    - #TODO - visualization notebook and notebook which summarizes whcih models performed best
+    - #TODO - notebook which summarizes whcih models performed best
 
 # Acknowledgements
 Just like for Capstone 1, apart from coffee and early mornings, this project wouldn't have been possible without:
