@@ -82,6 +82,7 @@ def run_experiment(
                         [y_test_root, y_test_vowel, y_test_consonant],
                     ),
                     steps_per_epoch=steps,
+                    callbacks=callbacks_list,
                 )
             else:
                 # if we don't need augmentation, we straight up train the model

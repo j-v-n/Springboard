@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
+from image_processor import image_processor_func
 
 
-def test_func(model, name):
+def test_func(model, name, normalize=True):
     preds_dict = {"grapheme_root": [], "vowel_diacritic": [], "consonant_diacritic": []}
 
     components = ["consonant_diacritic", "grapheme_root", "vowel_diacritic"]
@@ -13,8 +14,19 @@ def test_func(model, name):
         df_test_img.set_index("image_id", inplace=True)
 
         X_test = df_test_img.values.reshape(-1, 137, 236, 1)
+        X_test_resized = image_processor_func(X_test, resize=True, size=(118, 68))
+        X_test_resized = X_test_resized.values
 
-        preds = model.predict(X_test)
+        if normalize:
+            # instead of loading all the data into memory and normalizing (faster but requires memory)
+            # we go through the data one at a time. this is slower but does not crash your computer
+            # by using up all your memory :)
+            for i in range(X_test_resized.shape[0]):
+                X_test_resized[i] = X_test_resized[i] / 255
+
+        X_test_resized = X_test_resized.reshape(-1, 118, 68, 1)
+        X_test_resized = X_test_resized.reshape(-1, 68, 118, 1)
+        preds = model.predict(X_test_resized)
 
         for i, p in enumerate(preds_dict):
             preds_dict[p] = np.argmax(preds[i], axis=1)
