@@ -12,7 +12,7 @@ from keras.optimizers import Adam
 from keras.utils import plot_model
 from keras.backend import clear_session
 from keras import initializers
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 
 def model_create(
@@ -30,6 +30,8 @@ def model_create(
     activation_dense="relu",
     activation_out="softmax",
     bn_momentum=0.99,
+    early_stopping=False,
+    learningrate_reduction=False,
 ):
 
     """
@@ -40,6 +42,7 @@ def model_create(
     This uses the Keras Functional API
     """
     clear_session()
+    callbacks_list = []
     inputs = Input(shape=input_shape, name="input_layer")
     for i in range(n_conv_layers):
         # create alternating convolutional and pooling layers
@@ -92,21 +95,42 @@ def model_create(
     model.compile(
         optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
     )
+    if early_stopping:
+        es_root = EarlyStopping(
+            monitor="val_output_root_accuracy",
+            min_delta=0.01,
+            patience=15,
+            verbose=1,
+            mode="auto",
+        )
+        callbacks_list.append(es_root)
 
-    es_root = EarlyStopping(
-        monitor="output_root_accuracy", min_delta=1, patience=5, verbose=0, mode="auto"
-    )
-    es_vowel = EarlyStopping(
-        monitor="output_vowel_accuracy", min_delta=1, patience=5, verbose=0, mode="auto"
-    )
-    es_consonant = EarlyStopping(
-        monitor="output_consonant_accuracy",
-        min_delta=1,
-        patience=5,
-        verbose=0,
-        mode="auto",
-    )
-
-    callbacks_list = [es_root, es_vowel, es_consonant]
-    # returning the model
-    return model, callbacks_list
+    if learningrate_reduction:
+        lr_reduction_root = ReduceLROnPlateau(
+            monitor="val_output_root_accuracy",
+            factor=0.25,
+            patience=10,
+            verbose=1,
+            min_lr=1e-6,
+        )
+        lr_reduction_vowel = ReduceLROnPlateau(
+            monitor="val_output_vowel_accuracy",
+            factor=0.25,
+            patience=10,
+            verbose=1,
+            min_lr=1e-6,
+        )
+        lr_reduction_consonant = ReduceLROnPlateau(
+            monitor="val_output_root_accuracy",
+            factor=0.25,
+            patience=10,
+            verbose=1,
+            min_lr=1e-6,
+        )
+        callbacks_list.extend(
+            [lr_reduction_root, lr_reduction_vowel, lr_reduction_consonant]
+        )
+    if not callbacks_list:
+        return model
+    else:
+        return model, callbacks_list

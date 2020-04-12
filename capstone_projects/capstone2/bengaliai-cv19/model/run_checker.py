@@ -2,6 +2,7 @@ import os
 import re
 from collections import defaultdict
 import pandas as pd
+import yaml
 
 
 def results_accumulator(
@@ -28,12 +29,23 @@ def results_accumulator(
 
     # let's navigate through each of the subfolders and files within the mlruns folder
     for root, _, files in os.walk(os.getcwd()):
-        # let's isolate the experiment number using regular expressions
-        # exp_pattern = re.compile(r"{}/(\d\d?\d?)/.+/metrics".format(filepath))
-        exp_pattern = re.compile(r"{}/([0-9]+)/.+/metrics".format(filepath))
-        matches = exp_pattern.finditer(root)
-        for match in matches:
-            exp_number = match.group(1)
+
+        for f in files:
+            # the experiment number must be read from the meta yaml file using regular expressions
+            if f == "meta.yaml":
+                os.chdir(root)
+                yaml_dict = yaml.load(open(f))
+                if yaml_dict["name"] != "":
+                    exp_pattern = re.compile(r"exp_(\d\d?)_.")
+                    matches = exp_pattern.finditer(yaml_dict["name"])
+                    for match in matches:
+                        exp_number = match.group(1)
+        #     # let's isolate the experiment number using regular expressions
+        #     # exp_pattern = re.compile(r"{}/(\d\d?\d?)/.+/metrics".format(filepath))
+        #     exp_pattern = re.compile(r"{}/([0-9]+)/.+/metrics".format(filepath))
+        #     matches = exp_pattern.finditer(root)
+        #     for match in matches:
+        #         exp_number = match.group(1)
 
         # navigating into the metrics folder for each experiment
         if root.endswith("metrics"):
