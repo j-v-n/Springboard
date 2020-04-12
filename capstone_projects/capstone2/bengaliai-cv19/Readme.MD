@@ -20,8 +20,8 @@ In this project, the notebooks are only used to visualize the data and interacti
 
   - Notebooks
     - visualization -> Exploratory notebook which visualizes features within the dataset
-    - experiments -> First set of  experiments with a 108 experiment-long matrix. This set of experiments does not consider image augmentation
-    - experiments_second_set_augmentation -> Second set of experiments with the top 25 experiments from the first set, with image augmentation
+    - experiments -> First set of  experiments with a 81 experiment-long matrix. 
+
 
 # Reports
   - Milestone Report -> A summary of the EDA and data wrangling process
