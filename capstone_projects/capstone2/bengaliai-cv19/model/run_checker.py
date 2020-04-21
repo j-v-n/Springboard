@@ -40,12 +40,6 @@ def results_accumulator(
                     matches = exp_pattern.finditer(yaml_dict["name"])
                     for match in matches:
                         exp_number = match.group(1)
-        #     # let's isolate the experiment number using regular expressions
-        #     # exp_pattern = re.compile(r"{}/(\d\d?\d?)/.+/metrics".format(filepath))
-        #     exp_pattern = re.compile(r"{}/([0-9]+)/.+/metrics".format(filepath))
-        #     matches = exp_pattern.finditer(root)
-        #     for match in matches:
-        #         exp_number = match.group(1)
 
         # navigating into the metrics folder for each experiment
         if root.endswith("metrics"):
@@ -78,3 +72,99 @@ def results_accumulator(
     )
     # aaaaand finally returning our dataframe
     return master_exp_df
+
+
+def metrics_trends(
+    model_number,
+    filepath="/home/jayanth/Documents/springboard/capstone_projects/capstone2/bengaliai-cv19/mlruns",
+    metrics_list=[
+        "output_root_accuracy",
+        "output_root_loss",
+        "val_output_root_accuracy",
+        "output_vowel_accuracy",
+        "output_vowel_loss",
+        "val_output_vowel_accuracy",
+        "output_consonant_accuracy",
+        "output_consonant_loss",
+        "val_output_consonant_accuracy",
+        "val_output_root_loss",
+        "val_output_vowel_loss",
+        "val_output_consonant_loss",
+    ],
+):
+    """
+    This helper function navigates all the folders from the different mlflow experiments and populates
+    a dictionary with the trends of different metrics for each model number
+
+    Arguments:
+        filepath - Location of mlruns folder
+        model_number - Model number
+        metrics_list - List of metrics
+
+    """
+
+    # first let's change the current working directory
+    os.chdir(filepath)
+
+    # let's initiate an empty dictionary
+    trends_dict = defaultdict(dict)
+
+    time_flag = 0
+    time_list = []
+    # let's navigate through each of the subfolders and files within the mlruns folder
+    for root, _, files in os.walk(os.getcwd()):
+
+        for f in files:
+            # the experiment number must be read from the meta yaml file using regular expressions
+            if f == "meta.yaml":
+                os.chdir(root)
+                yaml_dict = yaml.load(open(f), Loader=yaml.FullLoader)
+                if yaml_dict["name"] != "":
+                    exp_pattern = re.compile(r"exp_(\d\d?)_.")
+                    matches = exp_pattern.finditer(yaml_dict["name"])
+                    for match in matches:
+                        exp_number = match.group(1)
+                        if int(exp_number) == model_number:
+                            name_pattern = re.compile(r"/mlruns/(\d\d?)")
+                            matches = name_pattern.finditer(root)
+                            for match in matches:
+                                folder_number = match.group(1)
+
+        try:
+            if "mlruns/{}/".format(folder_number) in root:
+                if root.endswith("metrics"):
+                    os.chdir(root)
+                    for f in files:
+                        if f in metrics_list:
+                            with open(f, "rb") as f_file:
+                                accuracy = []
+
+                                for line in f_file:
+                                    acc_pattern = re.compile(r"\d\.\d+")
+
+                                    line = line.decode()
+                                    acc_matches = acc_pattern.finditer(line)
+
+                                    for acc_match in acc_matches:
+                                        accuracy.append(float(acc_match[0]))
+
+                                    if time_flag == 0:
+                                        time_pattern = re.compile(r"1586\d{9}")
+                                        time_matches = time_pattern.finditer(line)
+                                        for time_match in time_matches:
+                                            time_list.append(time_match[0])
+
+                                if time_flag == 0:
+                                    trends_dict["time"] = time_list
+                                    time_flag += 1
+                                trends_dict[f] = accuracy
+
+        except UnboundLocalError:
+            pass
+
+    df = pd.DataFrame.from_dict(trends_dict)
+    df["time"] = df["time"].astype(int)
+    df["time"] = pd.to_datetime(df["time"], unit="ms")
+    df["cumtime"] = pd.to_timedelta(df["time"] - df["time"][0]).astype("timedelta64[s]")
+
+    return df
