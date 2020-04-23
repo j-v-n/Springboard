@@ -17,6 +17,7 @@ In this project, the notebooks are only used to visualize the data and interacti
     - run_checker -> Navigates the mlruns directory created by MLflow, reads all the test results using RegEx and populates a dataframe with the final experiment results
     - tester -> Used for inference on test data and creating output submission csv 
     - debugger -> Used on an as-needed basis for debugging
+    - plotter -> Used to plot performance metrics during training
 
   - Notebooks
     - visualization -> Exploratory notebook which visualizes features within the dataset
